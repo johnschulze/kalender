@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="de"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halbjahreskalender Brandenburg – Juli 2026 bis Juni 2027</title>
+<style>
+  :root{
+    --weekend: #c9c9c9;
+    --ferien: #e2e2e2;
+    --holiday-bg: #ffe9b3;
+    --today-bg: #cfe8ff;
+    --today-bar: #0b5ed7;
+    --border: #999;
+    --accent: #1e3a5f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    padding: 16px 20px 60px;
+    background: #f5f5f5;
+    color: #222;
+  }
+  h1 {
+    text-align: center;
+    margin: 4px 0 2px;
+    font-size: 26px;
+    color: var(--accent);
+  }
+  .subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .toolbar {
+    position: sticky;
+    top: 0;
+    background: #f5f5f5;
+    padding: 8px 0 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    z-index: 10;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 8px;
+  }
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button.secondary { background: #6c757d; }
+  button:hover { opacity: 0.88; }
+  button:focus-visible { outline: 3px solid #ffb703; outline-offset: 2px; }
+  #status {
+    font-size: 12px;
+    color: #1e7d34;
+    align-self: center;
+    min-width: 140px;
+  }
+  #linked {
+    font-size: 12px;
+    color: #555;
+    align-self: center;
+  }
+  #dirty {
+    max-width: 1500px;
+    margin: 0 auto 10px;
+    font-size: 13px;
+    text-align: center;
+    color: #8a4b00;
+    background: #fff3d6;
+    border: 1px solid #e5c98a;
+    border-radius: 5px;
+    padding: 6px 10px;
+    display: none;
+  }
+  #dirty.show { display: block; }
+  .half {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin: 0 auto 28px;
+    max-width: 1500px;
+    padding: 10px;
+    overflow-x: auto;
+  }
+  .half h2 {
+    margin: 4px 0 10px 4px;
+    font-size: 16px;
+    color: var(--accent);
+  }
+  .months {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(200px, 1fr));
+    gap: 6px;
+    min-width: 1300px;
+  }
+  .month {
+    border: 1px solid var(--border);
+  }
+  .month-title {
+    background: var(--accent);
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+  .day-row {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    font-size: 11px;
+    min-height: 22px;
+  }
+  .day-row.weekend { background: var(--weekend); }
+  .day-row.ferien:not(.weekend) { background: var(--ferien); }
+  .day-row.holiday { background: var(--holiday-bg); }
+  .day-row.today,
+  .day-row.today.weekend,
+  .day-row.today.ferien:not(.weekend),
+  .day-row.today.holiday {
+    background: var(--today-bg);
+    box-shadow: inset 4px 0 0 var(--today-bar), inset 0 0 0 1px var(--today-bar);
+  }
+  .day-row.today .datum { color: var(--today-bar); }
+  .day-row.today .datum .dn {
+    background: var(--today-bar);
+    color: white;
+    border-radius: 9px;
+    margin-left: -2px;
+    padding: 0 2px;
+    width: 20px;
+    text-align: center;
+  }
+  .datum {
+    font-weight: 600;
+    padding-left: 3px;
+    white-space: nowrap;
+    display: flex;
+    font-variant-numeric: tabular-nums;
+  }
+  .datum .wd {
+    display: inline-block;
+    width: 20px;
+  }
+  .datum .dn {
+    display: inline-block;
+    width: 18px;
+    text-align: right;
+  }
+  .note-wrap {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 3px 1px 0;
+    min-width: 0;
+  }
+  .holiday-label {
+    font-size: 9px;
+    color: #7a5200;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .note-field {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    background: #fff;
+    border-radius: 3px;
+  }
+  .note-mirror,
+  .note-input {
+    font: bold 12px "Segoe UI", Arial, sans-serif;
+    padding: 1px 3px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    width: 100%;
+    margin: 0;
+    letter-spacing: normal;
+  }
+  .note-mirror {
+    position: absolute;
+    inset: 0;
+    color: #000;
+    white-space: pre;
+    overflow: hidden;
+    pointer-events: none;
+    border-color: transparent;
+  }
+  .note-mirror .hl { color: #c00000; }
+  .note-mirror .hs { color: #1a7f37; }
+  .note-input {
+    position: relative;
+    display: block;
+    min-width: 0;
+    background: transparent;
+    color: transparent;
+    caret-color: #000;
+  }
+  .note-input::selection { background: rgba(30,58,95,0.25); color: transparent; }
+  .note-input:focus {
+    outline: 2px solid var(--accent);
+  }
+  .note-input::placeholder {
+    color: #aaa;
+    font-weight: normal;
+  }
+  .ferien-label {
+    font-size: 10px;
+    color: #555;
+    font-style: italic;
+  }
+  .no-slot {
+    color: #888;
+    font-size: 10px;
+    font-style: italic;
+  }
+  .legend {
+    max-width: 1500px;
+    margin: 0 auto 16px;
+    font-size: 12px;
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    flex-wrap: wrap;
+    color: #444;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .swatch { width: 14px; height: 14px; border: 1px solid #999; display: inline-block; }
+  @media print {
+    .toolbar, .legend, #dirty { display: none; }
+    body { background: white; padding: 0; }
+    .half { border: none; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Halbjahreskalender Brandenburg</h1>
+<div class="subtitle">Juli 2026 – Juni 2027 · Einträge werden automatisch auf GitHub gespeichert</div>
+
+<div class="toolbar">
+  <button onclick="push()">Jetzt speichern</button>
+  <button class="secondary" onclick="setToken()">GitHub-Token …</button>
+  <button class="secondary" onclick="exportData()">Einträge sichern (JSON)</button>
+  <button class="secondary" onclick="document.getElementById('importFile').click()">Einträge aus JSON laden</button>
+  <button class="secondary" onclick="clearAll()">Alle Einträge löschen</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+  <span id="status"></span>
+  <span id="linked"></span>
+</div>
+
+<div id="dirty">Ungespeicherte Änderungen – werden in wenigen Sekunden automatisch gespeichert.</div>
+
+<div class="legend">
+  <span><span class="swatch" style="background:var(--weekend)"></span> Wochenende</span>
+  <span><span class="swatch" style="background:var(--ferien)"></span> Ferien</span>
+  <span><span class="swatch" style="background:var(--holiday-bg)"></span> Feiertag</span>
+  <span><span class="swatch" style="background:var(--today-bg); border-color:var(--today-bar)"></span> Heute</span>
+</div>
+
+<div id="calendar"></div>
+
+<script>
+const REPO = 'johnschulze/kalender';
+const BRANCH = 'main';
+const FILE = 'notes.json';
+const API = 'https://api.github.com/repos/' + REPO + '/contents/' + FILE;
+const LS_TOKEN = 'kalender_gh_token', LS_NOTES = 'kalender_notes', LS_BASE = 'kalender_base';
+
+const WEEKDAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+const holidays = {
+  '2026-10-03': 'Tag der Deutschen Einheit',
+  '2026-10-31': 'Reformationstag',
+  '2026-12-25': '1. Weihnachtsfeiertag',
+  '2026-12-26': '2. Weihnachtsfeiertag',
+  '2027-01-01': 'Neujahr',
+  '2027-03-26': 'Karfreitag',
+  '2027-03-28': 'Ostersonntag',
+  '2027-03-29': 'Ostermontag',
+  '2027-05-01': 'Tag der Arbeit',
+  '2027-05-06': 'Christi Himmelfahrt',
+  '2027-05-16': 'Pfingstsonntag',
+  '2027-05-17': 'Pfingstmontag'
+};
+
+// [start, end, Bezeichnung] inclusive, ISO date strings
+const ferienRanges = [
+  ['2026-07-09','2026-08-22','Sommerferien'],
+  ['2026-10-19','2026-10-30','Herbstferien'],
+  ['2026-12-23','2027-01-02','Weihnachtsferien'],
+  ['2027-02-01','2027-02-06','Winterferien'],
+  ['2027-03-22','2027-04-02','Osterferien']
+];
+
+const halves = [
+  { title: '2. Halbjahr 2026', months: [[2026,7,'August'],[2026,8,'September'],[2026,9,'Oktober'],[2026,10,'November'],[2026,11,'Dezember'],[2027,0,'Januar']] },
+  { title: '1. Halbjahr 2027', months: [[2027,1,'Februar'],[2027,2,'März'],[2027,3,'April'],[2027,4,'Mai'],[2027,5,'Juni']] }
+];
+
+function pad(n){ return n < 10 ? '0'+n : ''+n; }
+
+function isoDate(y,m,d){
+  return y + '-' + pad(m+1) + '-' + pad(d);
+}
+
+// Heutiges Datum (lokale Zeit des Geräts) als ISO-String.
+function todayIso(){
+  const t = new Date();
+  return isoDate(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
+function daysInMonth(y,m){
+  return new Date(y, m+1, 0).getDate();
+}
+
+function ferienName(iso){
+  const hit = ferienRanges.find(([s,e]) => iso >= s && iso <= e);
+  return hit ? hit[2] : null;
+}
+
+
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function getToken(){ return lsGet(LS_TOKEN) || ''; }
+function readObj(k){ try{ const r = lsGet(k); return r ? JSON.parse(r) : {}; }catch(e){ return {}; } }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function sortObj(o){ const r = {}; Object.keys(o).sort().forEach(k => r[k] = o[k]); return r; }
+function same(a,b){ return JSON.stringify(sortObj(a)) === JSON.stringify(sortObj(b)); }
+
+// notes = Arbeitsstand, base = zuletzt von GitHub gesehener Stand
+let notes = readObj(LS_NOTES);
+let base = readObj(LS_BASE);
+let unsaved = false, saving = false, lastFetch = 0, timer = null, retryTimer = null;
+
+function persistLocal(){
+  lsSet(LS_NOTES, JSON.stringify(notes));
+  lsSet(LS_BASE, JSON.stringify(base));
+}
+
+function escHtml(t){
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Text schwarz, "Klausur" rot, "Schöffe" grün.
+function mirrorHtml(t){
+  return escHtml(t).replace(/(klausur)|(schöffe)/gi,function(m,k){
+    return k ? '<span class="hl">'+m+'</span>' : '<span class="hs">'+m+'</span>';
+  });
+}
+
+function buildMonth(year, monthIdx, name){
+  const n = daysInMonth(year, monthIdx);
+  let html = '<div class="month"><div class="month-title">'+name+'</div>';
+  for(let d=1; d<=n; d++){
+    const date = new Date(year, monthIdx, d);
+    const wd = WEEKDAYS[date.getDay()];
+    const iso = isoDate(year, monthIdx, d);
+    const isWeekend = (date.getDay() === 0 || date.getDay() === 6);
+    const ferienBezeichnung = ferienName(iso);
+    const isFerien = !!ferienBezeichnung;
+    const holidayName = holidays[iso];
+    const rowClasses = ['day-row'];
+    if(isWeekend) rowClasses.push('weekend');
+    if(isFerien) rowClasses.push('ferien');
+    if(holidayName) rowClasses.push('holiday');
+    if(iso === todayIso()) rowClasses.push('today');
+    const savedNote = notes[iso] ? notes[iso].replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;') : '';
+
+    let noteArea;
+    if(holidayName){
+      noteArea = '<span class="holiday-label">'+holidayName+'</span>';
+    } else if(isFerien){
+      noteArea = '<span class="ferien-label">'+ferienBezeichnung+'</span>';
+    } else if(isWeekend){
+      noteArea = '';
+    } else {
+      noteArea = '<div class="note-field"><div class="note-mirror">'+mirrorHtml(notes[iso]||'')+'</div>'
+               + '<input class="note-input" data-date="'+iso+'" value="'+savedNote+'" placeholder=""'+(getToken()?'':' readonly')+' oninput="onNoteInput(this)" onscroll="syncMirror(this)" onkeyup="syncMirror(this)"></div>';
+    }
+
+    html += '<div class="'+rowClasses.join(' ')+'">'
+          + '<div class="datum"><span class="wd">'+wd+'</span><span class="dn">'+d+'</span></div>'
+          + '<div class="note-wrap">'+noteArea+'</div>'
+          + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function render(){
+  const container = document.getElementById('calendar');
+  let out = '';
+  halves.forEach(half => {
+    out += '<div class="half"><h2>'+half.title+'</h2><div class="months">';
+    half.months.forEach(([y,m,name]) => { out += buildMonth(y,m,name); });
+    out += '</div></div>';
+  });
+  container.innerHTML = out;
+}
+
+
+function setUnsaved(state){
+  unsaved = state;
+  document.getElementById('dirty').classList.toggle('show', state);
+  if(state) scheduleSave();
+}
+
+function scheduleSave(){
+  clearTimeout(timer);
+  timer = setTimeout(push, 3000);
+}
+
+function setLinked(){
+  document.getElementById('linked').textContent = getToken()
+    ? 'Speichert auf GitHub'
+    : 'Nur Ansicht – Token eintragen zum Bearbeiten';
+}
+
+function syncMirror(el){
+  const m = el.previousElementSibling;
+  if(m){ m.scrollLeft = el.scrollLeft; }
+}
+
+function onNoteInput(el){
+  const iso = el.dataset.date;
+  const m = el.previousElementSibling;
+  if(m){ m.innerHTML = mirrorHtml(el.value); m.scrollLeft = el.scrollLeft; }
+  if(el.value.trim() === ''){
+    delete notes[iso];
+  } else {
+    notes[iso] = el.value;
+  }
+  persistLocal();
+  setUnsaved(!same(notes, base));
+}
+
+function applyToDom(){
+  document.querySelectorAll('.note-input').forEach(inp => {
+    if(document.activeElement === inp) return;
+    const v = notes[inp.dataset.date] || '';
+    if(inp.value !== v){
+      inp.value = v;
+      const m = inp.previousElementSibling;
+      if(m){ m.innerHTML = mirrorHtml(v); }
+    }
+  });
+}
+
+// ---- GitHub
+function ghHeaders(){
+  const h = {'Accept': 'application/vnd.github+json'};
+  const t = getToken();
+  if(t) h['Authorization'] = 'Bearer ' + t;
+  return h;
+}
+function b64ToUtf8(b64){
+  const bin = atob(b64.replace(/\s/g, ''));
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+function utf8ToB64(str){
+  let bin = '';
+  new TextEncoder().encode(str).forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+
+async function fetchRemote(){
+  const r = await fetch(API + '?ref=' + BRANCH + '&t=' + Date.now(), {headers: ghHeaders(), cache: 'no-store'});
+  if(r.status === 404) return {notes: {}, sha: null};
+  if(!r.ok){ const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+  const j = await r.json();
+  return {notes: JSON.parse(b64ToUtf8(j.content)), sha: j.sha};
+}
+
+// Lokale Änderungen (gegenüber base) auf den Remote-Stand anwenden.
+function mergeNotes(remote){
+  const merged = Object.assign({}, remote);
+  new Set([...Object.keys(base), ...Object.keys(notes)]).forEach(k => {
+    if(notes[k] !== base[k]){
+      if(notes[k] === undefined) delete merged[k]; else merged[k] = notes[k];
+    }
+  });
+  return merged;
+}
+
+async function pull(){
+  if(unsaved || saving) return;
+  try{
+    const r = await fetchRemote();
+    lastFetch = Date.now();
+    if(unsaved || saving) return;
+    notes = clone(r.notes);
+    base = clone(r.notes);
+    persistLocal();
+    applyToDom();
+  }catch(e){
+    showStatus(e.status === 401 ? 'Token ungültig' : 'Offline – letzter Stand wird angezeigt');
+  }
+}
+
+async function push(){
+  clearTimeout(timer);
+  if(!unsaved) return;
+  if(!getToken()){ showStatus('Kein Token – nur in diesem Browser gespeichert'); return; }
+  if(saving){ scheduleSave(); return; }
+  saving = true;
+  try{
+    for(let i = 0; i < 3; i++){
+      const snap = clone(notes);
+      const r = await fetchRemote();
+      const merged = mergeNotes(r.notes);
+      const body = {
+        message: 'Kalender aktualisiert',
+        content: utf8ToB64(JSON.stringify(sortObj(merged), null, 1) + '\n'),
+        branch: BRANCH
+      };
+      if(r.sha) body.sha = r.sha;
+      const res = await fetch(API, {
+        method: 'PUT',
+        headers: Object.assign({'Content-Type': 'application/json'}, ghHeaders()),
+        body: JSON.stringify(body),
+        keepalive: true
+      });
+      if(res.ok){
+        base = clone(merged);
+        new Set([...Object.keys(notes), ...Object.keys(merged)]).forEach(k => {
+          if(notes[k] === snap[k]){
+            if(merged[k] === undefined) delete notes[k]; else notes[k] = merged[k];
+          }
+        });
+        persistLocal();
+        applyToDom();
+        setUnsaved(!same(notes, base));
+        showStatus('Auf GitHub gespeichert ✓');
+        return;
+      }
+      if(res.status === 409 || res.status === 422) continue;
+      showStatus(res.status === 401 || res.status === 403 ? 'Token ungültig oder ohne Schreibrecht' : 'Speichern fehlgeschlagen (' + res.status + ')');
+      return;
+    }
+    showStatus('Speichern fehlgeschlagen – Konflikt');
+  }catch(e){
+    showStatus('Speichern fehlgeschlagen – nächster Versuch in 30 s');
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(push, 30000);
+  }finally{
+    saving = false;
+  }
+}
+
+function setToken(){
+  const t = prompt('GitHub-Token (Fine-grained, nur Repo kalender, Contents: Read and write). Leer lassen zum Entfernen:', getToken());
+  if(t === null) return;
+  lsSet(LS_TOKEN, t.trim());
+  render();
+  setLinked();
+  if(unsaved) scheduleSave(); else pull();
+}
+
+function showStatus(msg){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  setTimeout(() => { if(el.textContent === msg) el.textContent = ''; }, 4000);
+}
+
+function download(content, filename, type){
+  const blob = new Blob([content], {type: type + ';charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportData(){
+  download(JSON.stringify(sortObj(notes), null, 2), 'jahresplan_notizen_2026_2027.json', 'application/json');
+  showStatus('JSON-Sicherung heruntergeladen');
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      notes = Object.assign({}, notes, JSON.parse(e.target.result));
+      persistLocal();
+      render();
+      setUnsaved(!same(notes, base));
+      showStatus('Einträge geladen ✓');
+    }catch(err){
+      showStatus('Fehler beim Laden der Datei');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearAll(){
+  if(confirm('Wirklich alle Einträge löschen?')){
+    notes = {};
+    persistLocal();
+    render();
+    setUnsaved(!same(notes, base));
+    showStatus('Alle Einträge gelöscht');
+  }
+}
+
+window.addEventListener('beforeunload', function(e){
+  if(unsaved || saving){ e.preventDefault(); e.returnValue = ''; }
+});
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'hidden'){ if(unsaved) push(); }
+  else if(Date.now() - lastFetch > 30000){ pull(); }
+});
+window.addEventListener('pagehide', function(){ if(unsaved) push(); });
+setInterval(function(){ if(document.visibilityState === 'visible') pull(); }, 300000);
+
+render();
+setLinked();
+setUnsaved(!same(notes, base));
+pull();
+
+// Beim Öffnen zum heutigen Tag scrollen (falls im Kalenderzeitraum).
+(function(){
+  const row = document.querySelector('.day-row.today');
+  if(row){ row.scrollIntoView({block: 'center', inline: 'center'}); }
+})();
+
+// Markierung nachführen, wenn die Seite über Mitternacht offen bleibt.
+let lastToday = todayIso();
+window.addEventListener('focus', function(){
+  if(todayIso() !== lastToday && !unsaved){
+    lastToday = todayIso();
+    render();
+  }
+});
+</script></body></html>
