@@ -479,7 +479,13 @@ function utf8ToB64(str){
 async function fetchRemote(){
   const r = await fetch(API + '?ref=' + BRANCH + '&t=' + Date.now(), {headers: ghHeaders(), cache: 'no-store'});
   if(r.status === 404) return {notes: {}, sha: null};
-  if(!r.ok){ const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+  if(!r.ok){
+    let m = '';
+    try{ m = (await r.json()).message || ''; }catch(x){}
+    const e = new Error('HTTP ' + r.status + (m ? ' – ' + m : ''));
+    e.status = r.status;
+    throw e;
+  }
   const j = await r.json();
   return {notes: JSON.parse(b64ToUtf8(j.content)), sha: j.sha};
 }
@@ -506,7 +512,7 @@ async function pull(){
     persistLocal();
     applyToDom();
   }catch(e){
-    showStatus(e.status === 401 ? 'Token ungültig' : 'Offline – letzter Stand wird angezeigt');
+    showStatus(e.status ? (e.status === 401 ? 'Token ungültig: ' : 'GitHub-Fehler: ') + e.message : 'Offline – letzter Stand wird angezeigt');
   }
 }
 
@@ -563,7 +569,13 @@ async function push(){
 function setToken(){
   const t = prompt('GitHub-Token (Fine-grained, nur Repo kalender, Contents: Read and write). Leer lassen zum Entfernen:', getToken());
   if(t === null) return;
-  lsSet(LS_TOKEN, t.trim());
+  const tt = t.trim();
+  lsSet(LS_TOKEN, tt);
+  if(tt && !/^(github_pat_|ghp_)/.test(tt)){
+    showStatus('Achtung: Token beginnt nicht mit github_pat_ – falsch kopiert?');
+  } else if(tt){
+    showStatus('Token gespeichert (' + tt.length + ' Zeichen)');
+  }
   render();
   setLinked();
   if(unsaved) scheduleSave(); else pull();
@@ -572,7 +584,7 @@ function setToken(){
 function showStatus(msg){
   const el = document.getElementById('status');
   el.textContent = msg;
-  setTimeout(() => { if(el.textContent === msg) el.textContent = ''; }, 4000);
+  setTimeout(() => { if(el.textContent === msg) el.textContent = ''; }, 9000);
 }
 
 function download(content, filename, type){
